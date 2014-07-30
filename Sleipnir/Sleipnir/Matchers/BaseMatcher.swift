@@ -8,25 +8,18 @@
 
 import Foundation
 
-class BaseMatcher<T> {
+public class BaseMatcher<T> {
     
     var expected: T?
     
-    var expectedArr: [T]?
+    init() {
+    }
     
-    init(expected: T) {
+    init(expected: T?) {
         self.expected = expected
     }
     
-    init(expected: [T]) {
-        self.expectedArr = expected
-    }
-    
-    func match(actual: T) -> Bool {
-        return false
-    }
-    
-    func match(actual: [T]) -> Bool {
+    func match(actual: T?) -> Bool {
         return false
     }
     
@@ -34,21 +27,11 @@ class BaseMatcher<T> {
         return ""
     }
     
-    /// Private
-    
-    func failureMessageFor(value: T) -> String {
-        return "Expected <\(value)> to \(failureMessageEnd())"
+    func failureMessageFor(value: T?) -> String {
+        return "Expected <\(stringify(value))> to \(failureMessageEnd())"
     }
-    
-    func failureMessageFor(value: [T]) -> String {
-        return "Expected <\(value)> to \(failureMessageEnd())"
-    }
-    
-    func negativeFailureMessageFor(value: T) -> String {
-        return "Expected <\(value)> to not \(failureMessageEnd())"
-    }
-    
-    func negativeFailureMessageFor(value: [T]) -> String {
-        return "Expected <\(value)> to not \(failureMessageEnd())"
+
+    func negativeFailureMessageFor(value: T?) -> String {
+        return "Expected <\(stringify(value))> to not \(failureMessageEnd())"
     }
 }

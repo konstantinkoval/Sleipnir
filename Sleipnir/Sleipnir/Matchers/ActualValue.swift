@@ -8,28 +8,20 @@
 
 import Foundation
 
-class ActualValue<T> {
+public class ActualValue<T> {
     
     var value: T?
-    
-    var arrValue: [T]?
     
     var fileName: String
     var lineNumber: Int
 
-    init(value: T, fileName: String, lineNumber: Int) {
+    init(value: T?, fileName: String, lineNumber: Int) {
         self.value = value
         self.fileName = fileName
         self.lineNumber = lineNumber
     }
     
-    init(arrValue: [T], fileName: String, lineNumber: Int) {
-        self.arrValue = arrValue
-        self.fileName = fileName
-        self.lineNumber = lineNumber
-    }
-    
-    func to(matcher: BaseMatcher<T>) {
+    public func to(matcher: BaseMatcher<T>) {
         if (exampleFailed()) {
             return
         }
@@ -37,7 +29,7 @@ class ActualValue<T> {
         executePositiveMatch(matcher)
     }
     
-    func toNot(matcher: BaseMatcher<T>) {
+    public func toNot(matcher: BaseMatcher<T>) {
         if (exampleFailed()) {
             return
         }
@@ -45,57 +37,36 @@ class ActualValue<T> {
         executeNegativeMatch(matcher)
     }
     
-    // Private
-    
-    func executePositiveMatch(matcher: BaseMatcher<T>) {
-        if !match(matcher) {
-            var reason: String
-            if arrValue {
-                reason = matcher.failureMessageFor(arrValue!)
-            } else {
-                reason = matcher.failureMessageFor(value!)
-            }
-            
+    private func executePositiveMatch(matcher: BaseMatcher<T>) {
+        if !matcher.match(value) {
+            let reason = matcher.failureMessageFor(value)
             fail(reason)
         }
     }
     
-    func executeNegativeMatch(matcher: BaseMatcher<T>) {
-        if match(matcher) {
-            var reason: String
-            if arrValue {
-                reason = matcher.negativeFailureMessageFor(arrValue!)
-            } else {
-                reason = matcher.negativeFailureMessageFor(value!)
-            }
-            
+    private func executeNegativeMatch(matcher: BaseMatcher<T>) {
+        if matcher.match(value) {
+            let reason = matcher.negativeFailureMessageFor(value)
             fail(reason)
         }
     }
     
-    func fail(reason: String) {
-        var specFailure = SpecFailure(reason: reason, fileName: fileName, lineNumber: lineNumber)
+    private func fail(reason: String) {
+        var specFailure = SpecFailure(reasonRaw: reason, fileName: fileName, lineNumber: lineNumber)
         Runner.currentExample!.specFailure = specFailure
         Runner.currentExample!.setState(ExampleState.Failed)
     }
     
-    func match(matcher: BaseMatcher<T>) -> Bool {
-        if arrValue {
-            return matcher.match(arrValue!)
-        } else {
-            return matcher.match(value!)
-        }
-    }
-    
-    func exampleFailed() -> Bool {
+    private func exampleFailed() -> Bool {
         return Runner.currentExample!.failed()
     }
 }
 
-func expect<T>(value: T, file: String = __FILE__, line: Int = __LINE__) -> ActualValue<T> {
-    return ActualValue(value: value, fileName: file, lineNumber: line)
+public func expect<T>(expression: @auto_closure () -> T?,
+        file: String = __FILE__, line: Int = __LINE__) -> ActualValue<T> {
+    return ActualValue(value: expression(), fileName: file, lineNumber: line)
 }
 
-func expect<T>(arrValue: [T], file: String = __FILE__, line: Int = __LINE__) -> ActualValue<T> {
-    return ActualValue(arrValue: arrValue, fileName: file, lineNumber: line)
+public func expect<T>(file: String = __FILE__, line: Int = __LINE__, expression: () -> T?) -> ActualValue<T> {
+    return ActualValue(value: expression(), fileName: file, lineNumber: line)
 }

@@ -10,8 +10,7 @@ import Foundation
 
 class Observable<T> {
     
-    typealias DidSet = (newValue: T) -> ()
-    typealias Observer = (post: DidSet)
+    typealias Observer = (newValue: T) -> ()
     
     var observers = Dictionary<String, Observer>()
     
@@ -41,11 +40,9 @@ class Observable<T> {
         observers.removeValueForKey(identifer)
     }
     
-    // Private
-    
-    func notify() {
+    private func notify() {
         for (identifier, observer) in observers {
-            observer.post(newValue: observableProperty)
+            observer(newValue: observableProperty)
         }
     }
 }

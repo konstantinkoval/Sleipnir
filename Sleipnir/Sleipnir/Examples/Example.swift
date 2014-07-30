@@ -8,33 +8,40 @@
 
 import Foundation
 
+public typealias SleipnirBlock = () -> ()
+
+public let PENDING : SleipnirBlock? = nil
+
 class Example : ExampleBase {
     
-    var type: ExampleType
-    var block: SleipnirBlock
-    var group: ExampleGroup!
+    var block: SleipnirBlock!
     var state: Observable<ExampleState>
     var specFailure: SpecFailure?
     
-    init(_ label: String,
-        _ block: SleipnirBlock,
-        _ type: ExampleType = ExampleType.Normal) {
-            self.block = block
-            self.type = type
-            self.state = Observable<ExampleState>(value: ExampleState.Incomplete)
-            super.init(label)
+    init(_ label: String, _ block: SleipnirBlock?) {
+        if block {
+            self.block = block!
+        }
+        self.state = Observable<ExampleState>(value: ExampleState.Incomplete)
+        super.init(label)
     }
     
     override func runWithDispatcher(dispatcher: ReportDispatcher) {
         dispatcher.runWillStartExample(self)
         
-        if group { group.runBeforeEach() }
-        Runner.currentExample = self
-        block()
-        if group { group.runAfterEach() }
-        
-        if !failed() {
-            setState(ExampleState.Passed)
+        if !shouldRun() {
+            setState(ExampleState.Skipped)
+        } else if isPending() {
+            setState(ExampleState.Pending)
+        } else {
+            if parent { parent!.runBeforeEach() }
+            Runner.currentExample = self
+            block()
+            if parent { parent!.runAfterEach() }
+            
+            if !failed() {
+                setState(ExampleState.Passed)
+            }
         }
         
         dispatcher.runDidFinishExample(self)
@@ -47,6 +54,14 @@ class Example : ExampleBase {
     func failed() -> Bool {
         return self.state.get() == ExampleState.Failed
             || self.state.get() == ExampleState.Error
+    }
+    
+    func isPending() -> Bool {
+        if !block {
+            return true
+        }
+        
+        return false
     }
     
     func message() -> String {
@@ -66,25 +81,25 @@ class Example : ExampleBase {
     }
     
     func fullText() -> String {
-        if group {
-            return group.fullText() + " " + self.label
+        if parent {
+            return parent!.fullText() + " " + self.label
         } else {
             return self.label
         }
     }
 }
 
-func it(label: String, block: () -> ()) {
+public func it(label: String, block: SleipnirBlock?) {
     var example = Example(label, block)
     SpecTable.handleExample(example)
 }
 
-func fit(label: String, block: () -> ()) {
-    var example = Example(label, block, ExampleType.Focused)
+public func fit(label: String, block: SleipnirBlock) {
+    var example = Example(label, block)
+    example.focused = true
     SpecTable.handleExample(example)
 }
 
-func xit(label: String, block: () -> ()) {
-    var example = Example(label, block, ExampleType.Excluded)
-    SpecTable.handleExample(example)
+public func xit(label: String, block: SleipnirBlock) {
+    it(label, PENDING)
 }

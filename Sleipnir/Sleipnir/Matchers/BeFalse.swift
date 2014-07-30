@@ -8,13 +8,13 @@
 
 import Foundation
 
-class BeFalse<T>: BaseMatcher<T> {
+public class BeFalse<T>: BaseMatcher<T> {
     
-    init(expected: T) {
-        super.init(expected: expected)
+    init() {
+        super.init()
     }
     
-    override func match(actual: T) -> Bool {
+    override func match(actual: T?) -> Bool {
         return !(actual as Bool)
     }
     
@@ -23,6 +23,6 @@ class BeFalse<T>: BaseMatcher<T> {
     }
 }
 
-func beFalse() -> BeFalse<Bool> {
-    return BeFalse(expected: false)
+public func beFalse() -> BeFalse<Bool> {
+    return BeFalse()
 }

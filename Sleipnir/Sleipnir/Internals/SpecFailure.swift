@@ -12,23 +12,36 @@ class SpecFailure {
     
     var fileName: String?
     var lineNumber: Int?
-    var reason: String
+    var reasonRaw: String
     
-    init(reason: String) {
-        self.reason = reason
+    var reason: String {
+    get {
+        return trimReason(reasonRaw)
+    }
     }
     
-    init(reason: String, fileName: String, lineNumber: Int) {
-        self.reason = reason
+    init(reasonRaw: String) {
+        self.reasonRaw = reasonRaw
+    }
+    
+    init(reasonRaw: String, fileName: String, lineNumber: Int) {
+        self.reasonRaw = reasonRaw
         self.fileName = fileName
         self.lineNumber = lineNumber
     }
     
     func failure() -> String {
         if fileName && lineNumber {
-            return "\(fileName):\(lineNumber) \(reason)"
+            return "\(fileName!):\(lineNumber!) \(reason)"
         } else {
             return reason
         }
+    }
+    
+    func trimReason(reason: String) -> String {
+        var lines: [String] = (reason as NSString).componentsSeparatedByString("\n") as [String]
+        let whitespace = NSCharacterSet.whitespaceAndNewlineCharacterSet()
+        lines = lines.map { line in line.stringByTrimmingCharactersInSet(whitespace) }
+        return  "".join(lines)
     }
 }
